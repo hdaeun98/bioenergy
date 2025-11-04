@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Clock, Activity, Calendar, TrendingUp } from 'lucide-react';
+import { Clock, Activity, Calendar, TrendingUp, Edit } from 'lucide-react';
 import { CircadianProfile, MenstrualCycle, supabase } from '../lib/supabase';
 import { calculateEnergyLevels } from '../lib/energyCalculator';
 import { generateTimeSlotRecommendations, getPhaseAdvice } from '../lib/activityRecommendations';
 import { EnergyChart } from './EnergyChart';
 import { ActivityCard } from './ActivityCard';
 import { WeekForecast } from './WeekForecast';
+import { PeriodUpdateModal } from './PeriodUpdateModal';
 
 export function Dashboard() {
   const [circadianProfile, setCircadianProfile] = useState<CircadianProfile | null>(null);
   const [menstrualCycle, setMenstrualCycle] = useState<MenstrualCycle | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentHour] = useState(new Date().getHours());
+  const [showPeriodModal, setShowPeriodModal] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -129,9 +131,18 @@ export function Dashboard() {
 
         {menstrualCycle && (
           <div className="bg-gradient-to-r from-pink-100 to-purple-100 rounded-xl shadow-md p-6 mb-8">
-            <div className="flex items-center gap-3 mb-3">
-              <Activity className="w-5 h-5 text-pink-700" />
-              <h3 className="font-semibold text-gray-800">Cycle Insights</h3>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <Activity className="w-5 h-5 text-pink-700" />
+                <h3 className="font-semibold text-gray-800">Cycle Insights</h3>
+              </div>
+              <button
+                onClick={() => setShowPeriodModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-white text-pink-700 rounded-lg hover:bg-pink-50 transition-colors text-sm font-medium shadow-sm"
+              >
+                <Edit className="w-4 h-4" />
+                Update Period
+              </button>
             </div>
             <p className="text-gray-700">{phaseAdvice}</p>
           </div>
@@ -158,6 +169,14 @@ export function Dashboard() {
           circadianProfile={circadianProfile}
           menstrualCycle={menstrualCycle}
         />
+
+        {showPeriodModal && (
+          <PeriodUpdateModal
+            currentCycle={menstrualCycle}
+            onClose={() => setShowPeriodModal(false)}
+            onUpdate={loadUserData}
+          />
+        )}
       </div>
     </div>
   );

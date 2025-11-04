@@ -1,6 +1,7 @@
 import { CircadianProfile, MenstrualCycle } from '../lib/supabase';
 import { generate7DayPredictions } from '../lib/energyCalculator';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { getDailyRecommendations } from '../lib/dailyRecommendations';
+import { TrendingUp, TrendingDown, Minus, Utensils, Activity } from 'lucide-react';
 
 interface WeekForecastProps {
   circadianProfile: CircadianProfile;
@@ -46,42 +47,47 @@ export function WeekForecast({ circadianProfile, menstrualCycle }: WeekForecastP
     <div className="bg-white rounded-xl shadow-md p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">7-Day Energy Forecast</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {predictions.map((prediction, index) => {
           const isToday = index === 0;
           const previousEnergy = index > 0 ? predictions[index - 1].baselineEnergy : undefined;
+          const recommendations = getDailyRecommendations(
+            prediction.baselineEnergy,
+            prediction.cyclePhase
+          );
 
           return (
             <div
               key={index}
-              className={`border rounded-lg p-4 ${
+              className={`border rounded-lg p-5 ${
                 isToday ? 'border-blue-500 border-2 bg-blue-50' : 'border-gray-200'
               }`}
             >
-              <div className="text-center mb-3">
-                <p className={`font-semibold ${isToday ? 'text-blue-700' : 'text-gray-800'}`}>
-                  {isToday ? 'Today' : getDayName(prediction.date)}
-                </p>
-                <p className="text-sm text-gray-600">{formatDate(prediction.date)}</p>
-              </div>
-
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="text-3xl font-bold text-gray-800">
-                  {prediction.baselineEnergy}%
-                </span>
-                {getEnergyTrend(prediction.baselineEnergy, previousEnergy)}
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <p className={`font-semibold text-lg ${isToday ? 'text-blue-700' : 'text-gray-800'}`}>
+                    {isToday ? 'Today' : getDayName(prediction.date)}
+                  </p>
+                  <p className="text-sm text-gray-600">{formatDate(prediction.date)}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl font-bold text-gray-800">
+                    {prediction.baselineEnergy}%
+                  </span>
+                  {getEnergyTrend(prediction.baselineEnergy, previousEnergy)}
+                </div>
               </div>
 
               {menstrualCycle && prediction.cyclePhase !== 'neutral' && (
-                <div className="text-center">
+                <div className="mb-4">
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getPhaseColor(prediction.cyclePhase)}`}>
                     {getPhaseLabel(prediction.cyclePhase)}
                   </span>
                 </div>
               )}
 
-              <div className="mt-4">
-                <div className="h-16 flex items-end justify-between gap-0.5">
+              <div className="mb-4">
+                <div className="h-16 flex items-end justify-between gap-1">
                   {[0, 6, 12, 18].map((hour) => {
                     const level = prediction.hourlyLevels[hour];
                     const height = (level.energy / 100) * 100;
@@ -109,6 +115,42 @@ export function WeekForecast({ circadianProfile, menstrualCycle }: WeekForecastP
                   <span>6</span>
                   <span>12</span>
                   <span>18</span>
+                </div>
+              </div>
+
+              <div className="space-y-3 border-t pt-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Utensils className="w-4 h-4 text-green-600" />
+                    <h4 className="text-sm font-semibold text-gray-700">Recommended Foods</h4>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {recommendations.foods.slice(0, 3).map((food, i) => (
+                      <span
+                        key={i}
+                        className="text-xs px-2 py-1 bg-green-50 text-green-700 rounded-full border border-green-200"
+                      >
+                        {food}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity className="w-4 h-4 text-blue-600" />
+                    <h4 className="text-sm font-semibold text-gray-700">Recommended Activities</h4>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {recommendations.activities.slice(0, 3).map((activity, i) => (
+                      <span
+                        key={i}
+                        className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200"
+                      >
+                        {activity}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
